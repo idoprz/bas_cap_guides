@@ -1,16 +1,16 @@
 {
-	"name": "vscode-contrib1",
-	"displayName": "vscode-guided-dev-contrib1",
+	"name": "bas-cap-guides",
+	"displayName": "bas-cap-guides",
 	"description": "",
 	"version": "0.0.2",
-	"publisher": "SAPOSS",
+	"publisher": "saposs",
 	"engines": {
 		"vscode": "^1.44.2"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/SAP/guided-development",
-		"directory": "vscode-contrib1"
+		"url": "https://github.com/anafious/bas_cap_guides",
+		"directory": "bas_cap_guides"
 	},
 	"categories": [
 		"Other"
@@ -30,6 +30,7 @@
 	},
 	"dependencies": {
 		"@sap-devx/bas-platform-types": "0.0.10",
+		"@sap-devx/code-snippet-types": "0.0.6",
 		"@sap-devx/guided-development-types": "0.0.12",
 		"comment-json": "2.1.0",
 		"datauri": "^2.0.0",
@@ -50,6 +51,7 @@
 		"vscode-test": "^1.2.2"
 	},
 	"extensionDependencies": [
-		"SAPOSS.bas-platform"
+		"SAPOSS.bas-platform",
+		"saposs.code-snippet"
 	]
 }
