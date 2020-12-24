@@ -6,6 +6,7 @@ import { bas, ICommandAction, ISnippetAction, IExecuteAction } from '@sap-devx/b
 import * as os from "os";
 import { URL } from "url";
 import * as fsextra from "fs-extra";
+import FileCreator from './fileCreator';
 
 const datauri = require("datauri");
 
@@ -287,64 +288,73 @@ export async function activate(context: vscode.ExtensionContext) {
             // get the target project workspace folder
             const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length ? vscode.workspace.workspaceFolders[0] : undefined;
 
-
             if (!workspaceFolder) {
                 vscode.window.showErrorMessage("Cannot find folder");
                 reject('Cannot find folder');
                 return;
             }
 
+            const fileCreator = new FileCreator(we, context);
 
-
-            // create schema.cds file
+            // create schema.cds file using the file creator api
             const schemaCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/schema.cds`);
-            const cdsContent = await fsextra.readFile(schemaCdsDocUri.fsPath, "utf-8");
-
             const schemaDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/schema.cds`);
-            // create the schema cds file inside the target project workspace
-            we.createFile(schemaDestUri, {
-                overwrite: true,
-                ignoreIfExists: false
-            });
 
-            // copy the content 
-            we.insert(schemaDestUri, new vscode.Position(0, 0), cdsContent, { needsConfirmation: false, label: "snippet contributor" });
-
-            const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
-            const authorsCdsContent = await fsextra.readFile(authorsCdsDocUri.fsPath, "utf-8");
-            const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
-            we.createFile(authorsCsvDestUri, {
-                overwrite: true,
-                ignoreIfExists: false
-            });
-
-            we.insert(authorsCsvDestUri, new vscode.Position(0, 0), authorsCdsContent, { needsConfirmation: false, label: "snippet contributor" });
+            // here we add the schema. please notice that we are not creating the file now 
+            // we just add it to the workspace edit in order to create it later
+            // please make sure you call it with await since it reading the file content async inside
+            await fileCreator.addFileToCreate(schemaCdsDocUri, schemaDestUri, true, false);
 
 
-            const booksCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
-            const booksCdsContent = await fsextra.readFile(booksCdsDocUri.fsPath, "utf-8");
-            const booksCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Books.csv`);
-            we.createFile(booksCsvDestUri, {
-                overwrite: true,
-                ignoreIfExists: false
-            });
+            // ... Now we can add more files (like the csv files) using the addFileToCreate function 
+            // const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            // const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
+            // fileCreator.addFileToCreate(authorsCdsDocUri, authorsCsvDestUri, true, false);
 
-            we.insert(booksCsvDestUri, new vscode.Position(0, 0), booksCdsContent, { needsConfirmation: false, label: "snippet contributor" });
-
-            vscode.workspace.applyEdit(we);
-
-            resolve(true);
+            // finally, when we're ready to write the files we need to call the apply function 
+            fileCreator.apply();
+            
 
 
-            // const wsedit = new vscode.WorkspaceEdit();
-            // if (vscode.workspace.workspaceFolders) {
-            //     const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath; // gets the path of the first workspace folder
-            //     const filePath = vscode.Uri.file(wsPath + '/hello/world.md');
-            //     vscode.window.showInformationMessage(filePath.toString());
-            //     wsedit.createFile(filePath, { ignoreIfExists: true });
-            //     vscode.workspace.applyEdit(wsedit);
-            //     vscode.window.showInformationMessage('Created a new file: hello/world.md');
-            // };
+
+            // // create schema.cds file
+            // const schemaCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/schema.cds`);
+            // const cdsContent = await fsextra.readFile(schemaCdsDocUri.fsPath, "utf-8");
+
+            // const schemaDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/schema.cds`);
+            // // create the schema cds file inside the target project workspace
+            // we.createFile(schemaDestUri, {
+            //     overwrite: true,
+            //     ignoreIfExists: false
+            // });
+
+            // // copy the content 
+            // we.insert(schemaDestUri, new vscode.Position(0, 0), cdsContent, { needsConfirmation: false, label: "snippet contributor" });
+
+            // const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            // const authorsCdsContent = await fsextra.readFile(authorsCdsDocUri.fsPath, "utf-8");
+            // const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
+            // we.createFile(authorsCsvDestUri, {
+            //     overwrite: true,
+            //     ignoreIfExists: false
+            // });
+
+            // we.insert(authorsCsvDestUri, new vscode.Position(0, 0), authorsCdsContent, { needsConfirmation: false, label: "snippet contributor" });
+
+
+            // const booksCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            // const booksCdsContent = await fsextra.readFile(booksCdsDocUri.fsPath, "utf-8");
+            // const booksCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Books.csv`);
+            // we.createFile(booksCsvDestUri, {
+            //     overwrite: true,
+            //     ignoreIfExists: false
+            // });
+
+            // we.insert(booksCsvDestUri, new vscode.Position(0, 0), booksCdsContent, { needsConfirmation: false, label: "snippet contributor" });
+
+            // vscode.workspace.applyEdit(we);
+
+            // resolve(true);
         });
     };
     // createFileAction.executeAction = createFile;
