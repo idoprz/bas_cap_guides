@@ -2,9 +2,10 @@ import * as vscode from 'vscode';
 import { ISnippet } from '@sap-devx/code-snippet-types';
 import * as _ from 'lodash';
 import { ICollection, CollectionType, IItem, ManagerAPI } from '@sap-devx/guided-development-types';
-import { bas, ICommandAction,ISnippetAction, IExecuteAction } from '@sap-devx/bas-platform-types';
+import { bas, ICommandAction, ISnippetAction, IExecuteAction } from '@sap-devx/bas-platform-types';
 import * as os from "os";
 import { URL } from "url";
+import * as fsextra from "fs-extra";
 
 const datauri = require("datauri");
 
@@ -127,7 +128,7 @@ function getItems(): Array<IItem> {
         id: "define_bookshop_schema",
         title: "Define the Bookshop schmema",
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
-        action1: { 
+        action1: {
             name: "Create schema",
             action: createFileAction
         },
@@ -140,7 +141,7 @@ function getItems(): Array<IItem> {
         id: "define_bookshop_service",
         title: "Define the Bookshop service",
         description: "In this step you will define the bookshop application service which serves the books data.",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -153,7 +154,7 @@ function getItems(): Array<IItem> {
         id: "add_initial_data",
         title: "Add initial data to your bookshop application",
         description: "In this step you will define the bookshop application service which serves the books data.",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -165,7 +166,7 @@ function getItems(): Array<IItem> {
         id: "add_custom_logic",
         title: "Add custom logic to your application",
         description: "In this step you will define the bookshop application service which serves the books data.",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -177,7 +178,7 @@ function getItems(): Array<IItem> {
         id: "application_test_run",
         title: "Test run our application",
         description: "In this step you will define the bookshop application service which serves the books data.",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -193,7 +194,7 @@ function getItems(): Array<IItem> {
         id: "mashup_external_service",
         title: "Mashup with external service",
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -206,7 +207,7 @@ function getItems(): Array<IItem> {
         id: "add_fiori_ui",
         title: "Add an SAP Fiori UI",
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -219,7 +220,7 @@ function getItems(): Array<IItem> {
         id: "test_with_mock",
         title: "Test your application with Mock data",
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -232,7 +233,7 @@ function getItems(): Array<IItem> {
         id: "test_with_real",
         title: "Test your application with live backend data",
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -245,7 +246,7 @@ function getItems(): Array<IItem> {
         id: "deploy_application",
         title: "Deploy your application to SAP Cloud Platform",
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
-        action1: { 
+        action1: {
             name: "Open",
             action: openGlobalSettingsAction
         },
@@ -269,20 +270,87 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
     openWizardAction = new basAPI.actions.ExecuteAction();
-    openWizardAction.executeAction  = () => {
+    openWizardAction.executeAction = () => {
         return vscode.commands.executeCommand("sapbas.showProjectTemplates");
     };
 
     showMessageAction = new basAPI.actions.ExecuteAction();
-    showMessageAction.executeAction  = () => {
+    showMessageAction.executeAction = () => {
         return vscode.window.showInformationMessage("Hello from Open Global Settings item");
     };
 
     createFileAction = new basAPI.actions.ExecuteAction();
-    createFileAction.executeAction  = createFile;
+    createFileAction.executeAction = async () => {
+        return new Promise(async (resolve, reject) => {
+            const we = new vscode.WorkspaceEdit();
+
+            // get the target project workspace folder
+            const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length ? vscode.workspace.workspaceFolders[0] : undefined;
+
+
+            if (!workspaceFolder) {
+                vscode.window.showErrorMessage("Cannot find folder");
+                reject('Cannot find folder');
+                return;
+            }
+
+
+
+            // create schema.cds file
+            const schemaCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/schema.cds`);
+            const cdsContent = await fsextra.readFile(schemaCdsDocUri.fsPath, "utf-8");
+
+            const schemaDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/schema.cds`);
+            // create the schema cds file inside the target project workspace
+            we.createFile(schemaDestUri, {
+                overwrite: true,
+                ignoreIfExists: false
+            });
+
+            // copy the content 
+            we.insert(schemaDestUri, new vscode.Position(0, 0), cdsContent, { needsConfirmation: false, label: "snippet contributor" });
+
+            const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            const authorsCdsContent = await fsextra.readFile(authorsCdsDocUri.fsPath, "utf-8");
+            const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
+            we.createFile(authorsCsvDestUri, {
+                overwrite: true,
+                ignoreIfExists: false
+            });
+
+            we.insert(authorsCsvDestUri, new vscode.Position(0, 0), authorsCdsContent, { needsConfirmation: false, label: "snippet contributor" });
+
+
+            const booksCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            const booksCdsContent = await fsextra.readFile(booksCdsDocUri.fsPath, "utf-8");
+            const booksCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Books.csv`);
+            we.createFile(booksCsvDestUri, {
+                overwrite: true,
+                ignoreIfExists: false
+            });
+
+            we.insert(booksCsvDestUri, new vscode.Position(0, 0), booksCdsContent, { needsConfirmation: false, label: "snippet contributor" });
+
+            vscode.workspace.applyEdit(we);
+
+            resolve(true);
+
+
+            // const wsedit = new vscode.WorkspaceEdit();
+            // if (vscode.workspace.workspaceFolders) {
+            //     const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath; // gets the path of the first workspace folder
+            //     const filePath = vscode.Uri.file(wsPath + '/hello/world.md');
+            //     vscode.window.showInformationMessage(filePath.toString());
+            //     wsedit.createFile(filePath, { ignoreIfExists: true });
+            //     vscode.workspace.applyEdit(wsedit);
+            //     vscode.window.showInformationMessage('Created a new file: hello/world.md');
+            // };
+        });
+    };
+    // createFileAction.executeAction = createFile;
 
     cloneAction = new basAPI.actions.ExecuteAction();
-    cloneAction.executeAction  = () => {
+    cloneAction.executeAction = () => {
         return vscode.commands.executeCommand("git.clone", "https://github.com/SAP/code-snippet.git");
     };
 
@@ -293,32 +361,32 @@ export async function activate(context: vscode.ExtensionContext) {
     showInfoMessageAction.executeAction = () => {
         return vscode.window.showInformationMessage("Hello from guided development item");
     };
-    
+
     basAPI.getExtensionAPI<ManagerAPI>("SAPOSS.guided-development").then((managerAPI) => {
         managerAPI.setData(EXT_ID, getCollections(), getItems());
     });
 
     const api = {
-		getCodeSnippets(context: any) {
-			const snippets = new Map<string, ISnippet>();
-			let snippet: ISnippet = {
-				getMessages() {
-					return {
-						title: "Create Grocery List",
-						description: "Create an organized grocery list to avoid buying items you don't really need.",
-						applyButton: "Create"
-					};
-				},
-				async getQuestions() {
-					return createCodeSnippetQuestions(context);
-				},
-				async getWorkspaceEdit(answers: any) {
-					return createCodeSnippetWorkspaceEdit(answers, context);
-				}
-			}
-			snippets.set("snippet_1", snippet);
-			return snippets;
-		},
+        getCodeSnippets(context: any) {
+            const snippets = new Map<string, ISnippet>();
+            let snippet: ISnippet = {
+                getMessages() {
+                    return {
+                        title: "Create Grocery List",
+                        description: "Create an organized grocery list to avoid buying items you don't really need.",
+                        applyButton: "Create"
+                    };
+                },
+                async getQuestions() {
+                    return createCodeSnippetQuestions(context);
+                },
+                async getWorkspaceEdit(answers: any) {
+                    return createCodeSnippetWorkspaceEdit(answers, context);
+                }
+            }
+            snippets.set("snippet_1", snippet);
+            return snippets;
+        },
     };
 
     return api;
@@ -330,10 +398,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
 async function createCodeSnippetWorkspaceEdit(answers: any, context: any) {
 
-    
+
     const docUri: vscode.Uri = vscode.Uri.parse(vscode.Uri.file(os.homedir()) + vscode.Uri.file(path.sep + ".git-credentials").path);
-	const we = new vscode.WorkspaceEdit();
-	we.createFile(docUri, { ignoreIfExists: true });
+    const we = new vscode.WorkspaceEdit();
+    we.createFile(docUri, { ignoreIfExists: true });
 
     const url = new URL(answers.url);
     const username = encodeURIComponent(answers.path);
@@ -341,44 +409,44 @@ async function createCodeSnippetWorkspaceEdit(answers: any, context: any) {
     const newText = `${url.protocol}//${username}:${password}@${url.host}`;
     we.insert(docUri, new vscode.Position(0, 0), newText + '\n');
 
-	return we;
+    return we;
 }
 
 
-function createCodeSnippetQuestions(context: any) : any[] {
-	const questions: any[] = [];
+function createCodeSnippetQuestions(context: any): any[] {
+    const questions: any[] = [];
 
     questions.push(
-		{
-		  guiOptions: {
-			hint: "Add your favorite groceries to the list."
-		  },
-		  type: "checkbox",
-		  name: "groceries",
-		  message: "Groceries",
-		  choices: [
-			'Banana',
-			'Orange',
-			'Carrot',
-			'Bread',
-			'Pasta',
-			'Rice',
-			'Milk',
-			'Yogurt',
-			'Cheese'
-		  ]
-		},
-		{
-		  guiOptions: {
-			hint: "Select the folder to which you want to save the grocery list.",
-			type: "folder-browser",
-		  },
-		  type: "input",
-		  name: "path",
-		  message: "Target Folder",
-		  default: "/home/user/projects"
+        {
+            guiOptions: {
+                hint: "Add your favorite groceries to the list."
+            },
+            type: "checkbox",
+            name: "groceries",
+            message: "Groceries",
+            choices: [
+                'Banana',
+                'Orange',
+                'Carrot',
+                'Bread',
+                'Pasta',
+                'Rice',
+                'Milk',
+                'Yogurt',
+                'Cheese'
+            ]
         },
-		{
+        {
+            guiOptions: {
+                hint: "Select the folder to which you want to save the grocery list.",
+                type: "folder-browser",
+            },
+            type: "input",
+            name: "path",
+            message: "Target Folder",
+            default: "/home/user/projects"
+        },
+        {
             guiOptions: {
                 hint: "Do you want the groceries delivered to your home?",
             },
@@ -395,7 +463,7 @@ function createCodeSnippetQuestions(context: any) : any[] {
             name: "address",
             message: "Address",
             when: function (answers: any) {
-              return answers.isDelivery;
+                return answers.isDelivery;
             }
         },
         {
@@ -406,41 +474,54 @@ function createCodeSnippetQuestions(context: any) : any[] {
             name: "phoneNumber",
             message: "Phone Number",
             when: function (answers: any) {
-              return answers.isDelivery;
+                return answers.isDelivery;
             },
             validate: function (value: any) {
                 return value.match(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im) ? true : "Enter valid phone number.";
-              }
-          }
-      );
-  
+            }
+        }
+    );
+
     return questions;
 }
 
-function getImage(imagePath: string) :string {
+function getImage(imagePath: string): string {
     let image;
     try {
-      image = datauri.sync(imagePath);
+        image = datauri.sync(imagePath);
     } catch (error) {
         // image = DEFAULT_IMAGE;
     }
     return image;
 }
 
-function createFile(){
-    return new Promise((resolve, reject)=>{​​​​
-    const wsedit = new vscode.WorkspaceEdit();
-    if(vscode.workspace.workspaceFolders){
-        const wsPath =vscode.workspace.workspaceFolders[0].uri.fsPath; // gets the path of the first workspace folder
-        const filePath = vscode.Uri.file(wsPath + '/hello/world.md');
-        vscode.window.showInformationMessage(filePath.toString());
-        wsedit.createFile(filePath, { ignoreIfExists: true });
-        vscode.workspace.applyEdit(wsedit);
-        vscode.window.showInformationMessage('Created a new file: hello/world.md');
-    };
+function createFile() {
+    return new Promise((resolve, reject) => {
+        const we = new vscode.WorkspaceEdit();
 
-    resolve();
-          });
+
+
+        // create schema.cds file
+        // const apiDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/template/api.js`);
+        // const apiFileContent = await fsextra.readFile(apiDocUri.fsPath, "utf-8");
+        // const apiLocationUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/src/api/index.js`);
+        // we.createFile(apiLocationUri, {
+        //     overwrite: true,
+        //     ignoreIfExists: false
+        // });
+        // we.insert(apiLocationUri, new vscode.Position(0, 0), apiFileContent, { needsConfirmation: false, label: "snippet contributor" });
+        // const wsedit = new vscode.WorkspaceEdit();
+        // if (vscode.workspace.workspaceFolders) {
+        //     const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath; // gets the path of the first workspace folder
+        //     const filePath = vscode.Uri.file(wsPath + '/hello/world.md');
+        //     vscode.window.showInformationMessage(filePath.toString());
+        //     wsedit.createFile(filePath, { ignoreIfExists: true });
+        //     vscode.workspace.applyEdit(wsedit);
+        //     vscode.window.showInformationMessage('Created a new file: hello/world.md');
+        // };
+
+        // resolve();
+    });
 }
 
-export function deactivate() {}
+export function deactivate() { }

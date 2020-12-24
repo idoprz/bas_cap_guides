@@ -34,6 +34,7 @@
 		"@sap-devx/guided-development-types": "0.0.12",
 		"comment-json": "2.1.0",
 		"datauri": "^2.0.0",
+		"fs-extra": "^9.0.1",
 		"lodash": "^4.17.15"
 	},
 	"devDependencies": {
