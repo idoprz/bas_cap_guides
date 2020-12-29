@@ -7,6 +7,7 @@ import * as os from "os";
 import { URL } from "url";
 import * as fsextra from "fs-extra";
 import FileCreator from './fileCreator';
+import { cwd } from 'process';
 
 const datauri = require("datauri");
 
@@ -15,7 +16,11 @@ const EXT_ID = "saposs.bas-cap-guides";
 let openWizardAction: IExecuteAction;
 let showMessageAction: IExecuteAction;
 let cloneAction: IExecuteAction;
-let createFileAction: IExecuteAction;
+let createSchema: IExecuteAction;
+let createService: IExecuteAction;
+let createCSV: IExecuteAction;
+let createBusinessLogic: IExecuteAction;
+let application_test_run: IExecuteAction;
 let openGlobalSettingsAction: ICommandAction;
 let showInfoMessageAction: IExecuteAction;
 let extensionPath: string;
@@ -45,40 +50,6 @@ function getCollections(): ICollection[] {
     };
 
     collections.push(collection);
-
-    let collection2: ICollection = {
-        id: "createBasicApplication",
-        title: "Consume an external service with you SAP Cloud application",
-        description: "This guide will walk you through the diffrent steps required for consuming external services.",
-        type: CollectionType.Scenario,
-        itemIds: [
-            "saposs.bas-cap-guides.mashup_external_service",
-        ]
-    };
-    collections.push(collection2);
-
-
-    let collection3: ICollection = {
-        id: "createBasicApplication",
-        title: "Add an SAP Fiori UI to your SAP Cloud application",
-        description: "This guide will walk you through the diffrent steps required for adding an SAP Fiori UI to your cloud Application",
-        type: CollectionType.Scenario,
-        itemIds: [
-            "saposs.bas-cap-guides.add_fiori_ui",
-        ]
-    };
-    collections.push(collection3);
-
-    let collection4: ICollection = {
-        id: "createBasicApplication",
-        title: "Deploy your Application to SAP Cloud Platform",
-        description: "This guide will walk you through the diffrent steps needed for deploying your Application to SAP Cloud Platform",
-        type: CollectionType.Scenario,
-        itemIds: [
-            "saposs.bas-cap-guides.deploy_application",
-        ]
-    };
-    collections.push(collection4);
 
     return collections;
 }
@@ -131,7 +102,7 @@ function getItems(): Array<IItem> {
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
         action1: {
             name: "Create schema",
-            action: createFileAction
+            action: createSchema
         },
         labels: [
         ]
@@ -143,8 +114,8 @@ function getItems(): Array<IItem> {
         title: "Define the Bookshop service",
         description: "In this step you will define the bookshop application service which serves the books data.",
         action1: {
-            name: "Open",
-            action: openGlobalSettingsAction
+            name: "Create service",
+            action: createService
         },
         labels: [
         ]
@@ -154,10 +125,10 @@ function getItems(): Array<IItem> {
     item = {
         id: "add_initial_data",
         title: "Add initial data to your bookshop application",
-        description: "In this step you will define the bookshop application service which serves the books data.",
+        description: "In this step you will add initial data of <b>books</b> and <b>authors</bb> which will help us with testing the application.",
         action1: {
-            name: "Open",
-            action: openGlobalSettingsAction
+            name: "Add initial data",
+            action: createCSV
         },
         labels: [
         ]
@@ -166,10 +137,10 @@ function getItems(): Array<IItem> {
     item = {
         id: "add_custom_logic",
         title: "Add custom logic to your application",
-        description: "In this step you will define the bookshop application service which serves the books data.",
+        description: "In this step you will define the bookshop application service business logic, which will allow applying a discount for specific books.",
         action1: {
-            name: "Open",
-            action: openGlobalSettingsAction
+            name: "Add custom logic",
+            action: createBusinessLogic
         },
         labels: [
         ]
@@ -178,10 +149,10 @@ function getItems(): Array<IItem> {
     item = {
         id: "application_test_run",
         title: "Test run our application",
-        description: "In this step you will define the bookshop application service which serves the books data.",
+        description: "In this step you will test run your application, by running it on yiur developer workspace, serving the bookshop data with your bookshop service.<BR> you will first run <b>npm install</b> for installing all application dependencies, and then use the <b>Run Configuration Tool</b> for running your application.",
         action1: {
-            name: "Open",
-            action: openGlobalSettingsAction
+            name: "Test run",
+            action: application_test_run
         },
         labels: [
         ]
@@ -194,7 +165,7 @@ function getItems(): Array<IItem> {
     item = {
         id: "mashup_external_service",
         title: "Mashup with external service",
-        description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
+        description: "Open the command palette and start typing <b>consume SAP services</b><BR>Choose <b>Consume SAP Services</b><BR>Choose the <b>Business Application folder</b><BR>Choose <b>SAP API Business Hub</b><BR>Choose <b>SAP_API_Business_Hub as the destination</b><BR>Choose <b>Business Partner(A2X)</b><BR>Enter your username and password</b><BR>You should get a notification the action was successful and see new edmx and csn files (metadata.xml and metadata.json) in a new external folder under the bookshop srv folder",
         action1: {
             name: "Open",
             action: openGlobalSettingsAction
@@ -254,6 +225,7 @@ function getItems(): Array<IItem> {
         labels: [
         ]
     };
+    
     items.push(item);
     return items;
 }
@@ -264,10 +236,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
     extensionPath = context.extensionPath;
 
-    bookshopSchemaAction = new basAPI.actions.SnippetAction()
-    bookshopSchemaAction.contributorId = EXT_ID;
-    bookshopSchemaAction.snippetName = "snippet_1";
-    bookshopSchemaAction.context = {};
 
 
     openWizardAction = new basAPI.actions.ExecuteAction();
@@ -280,8 +248,8 @@ export async function activate(context: vscode.ExtensionContext) {
         return vscode.window.showInformationMessage("Hello from Open Global Settings item");
     };
 
-    createFileAction = new basAPI.actions.ExecuteAction();
-    createFileAction.executeAction = async () => {
+    createSchema = new basAPI.actions.ExecuteAction();
+    createSchema.executeAction = async () => {
         return new Promise(async (resolve, reject) => {
             const we = new vscode.WorkspaceEdit();
 
@@ -313,51 +281,144 @@ export async function activate(context: vscode.ExtensionContext) {
 
             // finally, when we're ready to write the files we need to call the apply function 
             fileCreator.apply();
+            vscode.window.showInformationMessage("File created successfully");
+
+
+
             
-
-
-
-            // // create schema.cds file
-            // const schemaCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/schema.cds`);
-            // const cdsContent = await fsextra.readFile(schemaCdsDocUri.fsPath, "utf-8");
-
-            // const schemaDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/schema.cds`);
-            // // create the schema cds file inside the target project workspace
-            // we.createFile(schemaDestUri, {
-            //     overwrite: true,
-            //     ignoreIfExists: false
-            // });
-
-            // // copy the content 
-            // we.insert(schemaDestUri, new vscode.Position(0, 0), cdsContent, { needsConfirmation: false, label: "snippet contributor" });
-
-            // const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
-            // const authorsCdsContent = await fsextra.readFile(authorsCdsDocUri.fsPath, "utf-8");
-            // const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
-            // we.createFile(authorsCsvDestUri, {
-            //     overwrite: true,
-            //     ignoreIfExists: false
-            // });
-
-            // we.insert(authorsCsvDestUri, new vscode.Position(0, 0), authorsCdsContent, { needsConfirmation: false, label: "snippet contributor" });
-
-
-            // const booksCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
-            // const booksCdsContent = await fsextra.readFile(booksCdsDocUri.fsPath, "utf-8");
-            // const booksCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Books.csv`);
-            // we.createFile(booksCsvDestUri, {
-            //     overwrite: true,
-            //     ignoreIfExists: false
-            // });
-
-            // we.insert(booksCsvDestUri, new vscode.Position(0, 0), booksCdsContent, { needsConfirmation: false, label: "snippet contributor" });
-
-            // vscode.workspace.applyEdit(we);
-
-            // resolve(true);
         });
     };
-    // createFileAction.executeAction = createFile;
+
+    createService = new basAPI.actions.ExecuteAction();
+    createService.executeAction = async () => {
+        return new Promise(async (resolve, reject) => {
+            const we = new vscode.WorkspaceEdit();
+
+            // get the target project workspace folder
+            const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length ? vscode.workspace.workspaceFolders[0] : undefined;
+
+            if (!workspaceFolder) {
+                vscode.window.showErrorMessage("Cannot find folder");
+                reject('Cannot find folder');
+                return;
+            }
+
+            const fileCreator = new FileCreator(we, context);
+
+            // create schema.cds file using the file creator api
+            const DocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/cat-service.cds`);
+            const DestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/srv/cat-service.cds`);
+
+            // here we add the schema. please notice that we are not creating the file now 
+            // we just add it to the workspace edit in order to create it later
+            // please make sure you call it with await since it reading the file content async inside
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+
+
+            // ... Now we can add more files (like the csv files) using the addFileToCreate function 
+            // const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            // const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
+            // fileCreator.addFileToCreate(authorsCdsDocUri, authorsCsvDestUri, true, false);
+
+            // finally, when we're ready to write the files we need to call the apply function 
+            fileCreator.apply();
+            vscode.window.showInformationMessage("File created successfully");
+
+
+
+            
+        });
+    };
+
+    createCSV = new basAPI.actions.ExecuteAction();
+    createCSV.executeAction = async () => {
+        return new Promise(async (resolve, reject) => {
+            const we = new vscode.WorkspaceEdit();
+
+            // get the target project workspace folder
+            const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length ? vscode.workspace.workspaceFolders[0] : undefined;
+
+            if (!workspaceFolder) {
+                vscode.window.showErrorMessage("Cannot find folder");
+                reject('Cannot find folder');
+                return;
+            }
+
+            const fileCreator = new FileCreator(we, context);
+
+            // create schema.cds file using the file creator api
+            const CSV1DocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            const CSV1DestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
+            const CSV2DocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Books.csv`);
+            const CSV2DestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Books.csv`);
+            // here we add the schema. please notice that we are not creating the file now 
+            // we just add it to the workspace edit in order to create it later
+            // please make sure you call it with await since it reading the file content async inside
+            await fileCreator.addFileToCreate(CSV1DocUri, CSV1DestUri, true, false);
+            await fileCreator.addFileToCreate(CSV2DocUri, CSV2DestUri, true, false);
+
+            // ... Now we can add more files (like the csv files) using the addFileToCreate function 
+            // const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            // const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
+            // fileCreator.addFileToCreate(authorsCdsDocUri, authorsCsvDestUri, true, false);
+
+            // finally, when we're ready to write the files we need to call the apply function 
+            fileCreator.apply();
+            vscode.window.showInformationMessage("File created successfully");
+
+
+
+            
+        });
+    };
+
+    createBusinessLogic = new basAPI.actions.ExecuteAction();
+    createBusinessLogic.executeAction = async () => {
+        return new Promise(async (resolve, reject) => {
+            const we = new vscode.WorkspaceEdit();
+
+            // get the target project workspace folder
+            const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length ? vscode.workspace.workspaceFolders[0] : undefined;
+
+            if (!workspaceFolder) {
+                vscode.window.showErrorMessage("Cannot find folder");
+                reject('Cannot find folder');
+                return;
+            }
+
+            const fileCreator = new FileCreator(we, context);
+
+            // create schema.cds file using the file creator api
+            const DocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/cat-service.js`);
+            const DestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/srv/cat-service.js`);
+
+            // here we add the schema. please notice that we are not creating the file now 
+            // we just add it to the workspace edit in order to create it later
+            // please make sure you call it with await since it reading the file content async inside
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+
+
+            // ... Now we can add more files (like the csv files) using the addFileToCreate function 
+            // const authorsCdsDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/my-bookshop-Authors.csv`);
+            // const authorsCsvDestUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/db/data/my-bookshop-Authors.csv`);
+            // fileCreator.addFileToCreate(authorsCdsDocUri, authorsCsvDestUri, true, false);
+
+            // finally, when we're ready to write the files we need to call the apply function 
+            fileCreator.apply();
+            vscode.window.showInformationMessage("File created successfully");
+
+
+
+            
+        });
+    };
+
+    
+    application_test_run = new basAPI.actions.ExecuteAction();
+    application_test_run.executeAction = () => {
+       return vscode.commands.executeCommand("git.clone", "https://github.com/SAP/code-snippet.git");
+       
+    }
 
     cloneAction = new basAPI.actions.ExecuteAction();
     cloneAction.executeAction = () => {
@@ -376,124 +437,14 @@ export async function activate(context: vscode.ExtensionContext) {
         managerAPI.setData(EXT_ID, getCollections(), getItems());
     });
 
-    const api = {
-        getCodeSnippets(context: any) {
-            const snippets = new Map<string, ISnippet>();
-            let snippet: ISnippet = {
-                getMessages() {
-                    return {
-                        title: "Create Grocery List",
-                        description: "Create an organized grocery list to avoid buying items you don't really need.",
-                        applyButton: "Create"
-                    };
-                },
-                async getQuestions() {
-                    return createCodeSnippetQuestions(context);
-                },
-                async getWorkspaceEdit(answers: any) {
-                    return createCodeSnippetWorkspaceEdit(answers, context);
-                }
-            }
-            snippets.set("snippet_1", snippet);
-            return snippets;
-        },
-    };
-
-    return api;
 }
 
 
 
 
 
-async function createCodeSnippetWorkspaceEdit(answers: any, context: any) {
 
 
-    const docUri: vscode.Uri = vscode.Uri.parse(vscode.Uri.file(os.homedir()) + vscode.Uri.file(path.sep + ".git-credentials").path);
-    const we = new vscode.WorkspaceEdit();
-    we.createFile(docUri, { ignoreIfExists: true });
-
-    const url = new URL(answers.url);
-    const username = encodeURIComponent(answers.path);
-    const password = encodeURIComponent(answers.address);
-    const newText = `${url.protocol}//${username}:${password}@${url.host}`;
-    we.insert(docUri, new vscode.Position(0, 0), newText + '\n');
-
-    return we;
-}
-
-
-function createCodeSnippetQuestions(context: any): any[] {
-    const questions: any[] = [];
-
-    questions.push(
-        {
-            guiOptions: {
-                hint: "Add your favorite groceries to the list."
-            },
-            type: "checkbox",
-            name: "groceries",
-            message: "Groceries",
-            choices: [
-                'Banana',
-                'Orange',
-                'Carrot',
-                'Bread',
-                'Pasta',
-                'Rice',
-                'Milk',
-                'Yogurt',
-                'Cheese'
-            ]
-        },
-        {
-            guiOptions: {
-                hint: "Select the folder to which you want to save the grocery list.",
-                type: "folder-browser",
-            },
-            type: "input",
-            name: "path",
-            message: "Target Folder",
-            default: "/home/user/projects"
-        },
-        {
-            guiOptions: {
-                hint: "Do you want the groceries delivered to your home?",
-            },
-            type: "confirm",
-            name: "isDelivery",
-            message: "Delivery",
-            default: false
-        },
-        {
-            guiOptions: {
-                hint: "Provide the address for delivery.",
-            },
-            type: "input",
-            name: "address",
-            message: "Address",
-            when: function (answers: any) {
-                return answers.isDelivery;
-            }
-        },
-        {
-            guiOptions: {
-                hint: "Provide your phone number.",
-            },
-            type: "input",
-            name: "phoneNumber",
-            message: "Phone Number",
-            when: function (answers: any) {
-                return answers.isDelivery;
-            },
-            validate: function (value: any) {
-                return value.match(/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im) ? true : "Enter valid phone number.";
-            }
-        }
-    );
-
-    return questions;
-}
 
 function getImage(imagePath: string): string {
     let image;
@@ -505,33 +456,6 @@ function getImage(imagePath: string): string {
     return image;
 }
 
-function createFile() {
-    return new Promise((resolve, reject) => {
-        const we = new vscode.WorkspaceEdit();
 
-
-
-        // create schema.cds file
-        // const apiDocUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/template/api.js`);
-        // const apiFileContent = await fsextra.readFile(apiDocUri.fsPath, "utf-8");
-        // const apiLocationUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/src/api/index.js`);
-        // we.createFile(apiLocationUri, {
-        //     overwrite: true,
-        //     ignoreIfExists: false
-        // });
-        // we.insert(apiLocationUri, new vscode.Position(0, 0), apiFileContent, { needsConfirmation: false, label: "snippet contributor" });
-        // const wsedit = new vscode.WorkspaceEdit();
-        // if (vscode.workspace.workspaceFolders) {
-        //     const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath; // gets the path of the first workspace folder
-        //     const filePath = vscode.Uri.file(wsPath + '/hello/world.md');
-        //     vscode.window.showInformationMessage(filePath.toString());
-        //     wsedit.createFile(filePath, { ignoreIfExists: true });
-        //     vscode.workspace.applyEdit(wsedit);
-        //     vscode.window.showInformationMessage('Created a new file: hello/world.md');
-        // };
-
-        // resolve();
-    });
-}
 
 export function deactivate() { }
