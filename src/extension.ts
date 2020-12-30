@@ -8,7 +8,7 @@ import { URL } from "url";
 import * as fsextra from "fs-extra";
 import FileCreator from './fileCreator';
 import { cwd } from 'process';
-
+const homeDir = require('os').homedir();
 const datauri = require("datauri");
 
 const EXT_ID = "saposs.bas-cap-guides";
@@ -194,7 +194,7 @@ function getItems(): Array<IItem> {
         description: "In this step you will define the bookshop application data schmea which is composed out of three main entities: <BR> - Books<BR> - Authors<BR> - Geners",
         action1: {
             name: "Open",
-            action: openGlobalSettingsAction
+            action: application_test_run
         },
         labels: [
         ]
@@ -416,6 +416,22 @@ export async function activate(context: vscode.ExtensionContext) {
     
     application_test_run = new basAPI.actions.ExecuteAction();
     application_test_run.executeAction = () => {
+
+        // change focus of run config
+        vscode.commands.executeCommand("runConfigurations.focus");
+
+        // run npm install task
+        let options: vscode.ShellExecutionOptions = {cwd: homeDir};
+        let execution = new vscode.ShellExecution("npm install", options);
+        let task = new vscode.Task(
+            { type: 'shell' },
+            vscode.TaskScope.Workspace,
+            'npm install',
+            'npm',
+            execution);
+        
+        vscode.tasks.executeTask(task);
+        
        return vscode.commands.executeCommand("git.clone", "https://github.com/SAP/code-snippet.git");
        
     }
