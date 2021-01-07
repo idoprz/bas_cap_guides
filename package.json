@@ -2,7 +2,7 @@
 	"name": "bas-cap-guides",
 	"displayName": "bas-cap-guides",
 	"description": "",
-	"version": "0.0.2",
+	"version": "0.0.4",
 	"publisher": "saposs",
 	"engines": {
 		"vscode": "^1.44.2"

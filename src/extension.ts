@@ -42,9 +42,9 @@ function getCollections(): ICollection[] {
     const collections: Array<ICollection> = [];
 
 
-    let collection: ICollection = {
-        id: "createBasicApplication",
-        title: "Create a simple S/4HANA Extension using CAP Node.js",
+    let tutorialCollection: ICollection = {
+        id: "tutoailApplication",
+        title: "Tutorial - Create a simple S/4HANA Extension using CAP Node.js",
         description: "Create a simple S/4HANA Extension using CAP Node.js",
         type: CollectionType.Scenario,
         itemIds: [
@@ -57,8 +57,45 @@ function getCollections(): ICollection[] {
         ]
     };
 
-    collections.push(collection);
+    collections.push(tutorialCollection);
 
+    let fioriCollection: ICollection = {
+        id: "fioriApplication",
+        title: "Add Fiori UI to your CAP cloud application",
+        description: "Use Fiori tools for adding a Fiori UI served by your project CAP services",
+        type: CollectionType.Scenario,
+        itemIds: [
+            "saposs.bas-cap-guides.create_fiori_application",
+        ]
+    };
+
+    collections.push(fioriCollection);
+
+
+    let deploymentCollection: ICollection = {
+        id: "deployApplication",
+        title: "Deploy your application to SAP Business Technology Platform",
+        description: "Bulid and deploy your application to SAP BTP",
+        type: CollectionType.Scenario,
+        itemIds: [
+            "saposs.bas-cap-guides.deploy_application",
+        ]
+    };
+
+    collections.push(deploymentCollection);
+
+
+    let mashupCollection: ICollection = {
+        id: "deployApplication",
+        title: "Import an external service data model",
+        description: "Import an external service definition and mesh it with your application services",
+        type: CollectionType.Scenario,
+        itemIds: [
+            "saposs.bas-cap-guides.import_data_model_stadalone",
+        ]
+    };
+
+    collections.push(mashupCollection);
     return collections;
 }
 
@@ -430,6 +467,37 @@ items.push(item);
     };
     
     items.push(item);
+
+
+    /////////////////////////// standalone items
+
+    item = {
+        id: "create_fiori_application",
+        title: "Create an SAP Fiori application consuming one of your CAP Services",
+        description: "1. Open the <b>Project Explorer</b> and view your application <BR>2. Open the context menu on the selected service and choose create UI <BR>3. Select the <b>SAP Fiori Elements application generator</b> and click next <BR>4. Select the target service as the OData Service and click next <BR>5. Leave the default project attributes. Choose the main entity and click next <BR>6. Leave the defaults for the project name and title and click finish <BR>7. Under the <b>app</b> folder you should see the SAP Fiori application has been created.",
+        action1: {
+            name: "Done",
+            action: openWizardAction
+        },
+        labels: [
+        ]
+    };
+    items.push(item);
+
+    item = {
+        id: "import_data_model_stadalone",
+        title: "Import an external data model",
+        description: "1. Open the command palette and start typing <b>consume SAP services</b><BR>2. Choose <b>Consume SAP Services</b><BR>3. Choose the <b>Business Application folder</b><BR>4. Choose the service source you would like to import<BR><BR>After import, you should get a notification the action was successful and see new edmx and csn files (metadata.xml and metadata.json) in a new external folder under the application srv folder",
+        action1: {
+            name: "Add service",
+            action: consumeSAPServices
+        },
+        labels: [
+        ]
+    };
+    items.push(item);
+
+
     return items;
 }
 
@@ -474,7 +542,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(schemaCdsDocUri, schemaDestUri, true, false);
+            await fileCreator.addFileToCreate(schemaCdsDocUri, schemaDestUri, true, true);
 
 
             // finally, when we're ready to write the files we need to call the apply function 
@@ -510,7 +578,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, true);
 
 
 
@@ -548,8 +616,8 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(CSV1DocUri, CSV1DestUri, true, false);
-            await fileCreator.addFileToCreate(CSV2DocUri, CSV2DestUri, true, false);
+            await fileCreator.addFileToCreate(CSV1DocUri, CSV1DestUri, true, true);
+            await fileCreator.addFileToCreate(CSV2DocUri, CSV2DestUri, true, true);
 
 
             // finally, when we're ready to write the files we need to call the apply function 
@@ -585,7 +653,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, true);
 
 
 
@@ -648,7 +716,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, true);
 
 
             // ... Now we can add more files (like the csv files) using the addFileToCreate function 
@@ -687,7 +755,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, true);
 
 
             // finally, when we're ready to write the files we need to call the apply function 
@@ -724,7 +792,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, true);
 
 
             // ... Now we can add more files (like the csv files) using the addFileToCreate function 
@@ -760,7 +828,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, true);
 
 
             // finally, when we're ready to write the files we need to call the apply function 
@@ -796,7 +864,7 @@ export async function activate(context: vscode.ExtensionContext) {
             // here we add the schema. please notice that we are not creating the file now 
             // we just add it to the workspace edit in order to create it later
             // please make sure you call it with await since it reading the file content async inside
-            await fileCreator.addFileToCreate(DocUri, DestUri, true, false);
+            await fileCreator.addFileToCreate(DocUri, DestUri, true, true);
 
 
             // finally, when we're ready to write the files we need to call the apply function 
