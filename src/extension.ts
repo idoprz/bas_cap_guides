@@ -503,7 +503,7 @@ items.push(item);
 
 export async function activate(context: vscode.ExtensionContext) {
     console.log('Congratulations, your extension "cap_bas_guides" is now active!');
-    const basAPI: typeof bas = vscode.extensions.getExtension("SAPOSS.bas-platform")?.exports;
+    const basAPI: typeof bas = vscode.extensions.getExtension("SAPOSS.app-studio-toolkit")?.exports;
 
     extensionPath = context.extensionPath;
 
