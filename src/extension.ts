@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ISnippet } from '@sap-devx/code-snippet-types';
 import * as _ from 'lodash';
 import { ICollection, CollectionType, IItem, ManagerAPI } from '@sap-devx/guided-development-types';
-import { bas, ICommandAction, ISnippetAction, IExecuteAction } from '@sap-devx/bas-platform-types';
+import { bas, ICommandAction, ISnippetAction, IExecuteAction } from '@sap-devx/app-studio-toolkit-types';
 import * as os from "os";
 import { URL } from "url";
 import * as fsextra from "fs-extra";
