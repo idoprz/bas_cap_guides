@@ -29,7 +29,7 @@
 		"package": "vsce package ."
 	},
 	"dependencies": {
-		"@sap-devx/bas-platform-types": "0.0.10",
+		"@sap-devx/app-studio-toolkit-types": "0.0.11",
 		"@sap-devx/code-snippet-types": "0.0.6",
 		"@sap-devx/guided-development-types": "0.0.12",
 		"comment-json": "2.1.0",
@@ -52,7 +52,7 @@
 		"vscode-test": "^1.2.2"
 	},
 	"extensionDependencies": [
-		"SAPOSS.bas-platform",
+		"SAPOSS.app-studio-toolkit",
 		"saposs.code-snippet"
 	]
 }
