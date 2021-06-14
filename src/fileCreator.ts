@@ -26,12 +26,23 @@ export default class FileCreator {
         this.workspaceEdit.insert(destUri, new Position(0, 0), sourceContent, { needsConfirmation: false, label: "" });
     }
 
+    async addFileToCreateBySource(sourceContent: string, destUri: Uri, overwrite: boolean = false, ignoreIfExists: boolean = true) {
+
+        // create the schema cds file inside the target project workspace
+        this.workspaceEdit.createFile(destUri, {
+            overwrite,
+            ignoreIfExists
+        });
+
+        this.workspaceEdit.insert(destUri, new Position(0, 0), sourceContent, { needsConfirmation: false, label: "" });
+    }
+
     /**
      * This function will perform the copy operation of all 
      * the files we 
      */
     apply() {
-        workspace.applyEdit(this.workspaceEdit);
+        return workspace.applyEdit(this.workspaceEdit);
     }
 
 }

@@ -9,11 +9,13 @@ import * as fsextra from "fs-extra";
 import FileCreator from './fileCreator';
 import { cwd } from 'process';
 import { open, openSync } from 'fs';
+import { Position } from 'vscode';
 const homeDir = require('os').homedir();
 const datauri = require("datauri");
 
 const EXT_ID = "saposs.bas-cap-guides";
 
+let snippetAction1: ISnippetAction;
 let openWizardAction: IExecuteAction;
 let showMessageAction: IExecuteAction;
 let cloneAction: IExecuteAction;
@@ -22,13 +24,13 @@ let createService: IExecuteAction;
 let createCSV: IExecuteAction;
 let createBusinessLogic: IExecuteAction;
 let application_test_run: IExecuteAction;
-let consumeSAPServices : IExecuteAction;
-let updateServiceCDS : IExecuteAction;
-let addBPLogic : IExecuteAction;
-let importBBPCSV : IExecuteAction;
-let addAnnotations : IExecuteAction;
-let createProdProfile : IExecuteAction;
-let fileExplorerFocus : IExecuteAction;
+let consumeSAPServices: IExecuteAction;
+let updateServiceCDS: IExecuteAction;
+let addBPLogic: IExecuteAction;
+let importBBPCSV: IExecuteAction;
+let addAnnotations: IExecuteAction;
+let createProdProfile: IExecuteAction;
+let fileExplorerFocus: IExecuteAction;
 let openGlobalSettingsAction: ICommandAction;
 let showInfoMessageAction: IExecuteAction;
 let extensionPath: string;
@@ -204,27 +206,27 @@ function getItems(): Array<IItem> {
     items.push(item);
 
 
-////////////////// part 2 Extend the application
+    ////////////////// part 2 Extend the application
 
-item = {
-    id: "extend_application",
-    title: "Extend the application – mashup with SAP S/4HANA Cloud service",
-    description: "In this section you will extend your bookshop application by mashing up your service with an SAP S/4HANA cloud service (Business Partner service) ",
-    image: {
-        image: getImage(path.join(extensionPath, 'resources', 'external_service.png')),
-        note: "S/4Hana cloud mashup"
-    },
-    itemIds: [
-        "saposs.bas-cap-guides.import_data_model",
-        "saposs.bas-cap-guides.update_service_cds",
-        "saposs.bas-cap-guides.add_bp_logic",
-        "saposs.bas-cap-guides.import_bp_csv",
-    ],
-    labels: [
+    item = {
+        id: "extend_application",
+        title: "Extend the application – mashup with SAP S/4HANA Cloud service",
+        description: "In this section you will extend your bookshop application by mashing up your service with an SAP S/4HANA cloud service (Business Partner service) ",
+        image: {
+            image: getImage(path.join(extensionPath, 'resources', 'external_service.png')),
+            note: "S/4Hana cloud mashup"
+        },
+        itemIds: [
+            "saposs.bas-cap-guides.import_data_model",
+            "saposs.bas-cap-guides.update_service_cds",
+            "saposs.bas-cap-guides.add_bp_logic",
+            "saposs.bas-cap-guides.import_bp_csv",
+        ],
+        labels: [
 
-    ]
-};
-items.push(item);
+        ]
+    };
+    items.push(item);
 
     item = {
         id: "import_data_model",
@@ -245,7 +247,7 @@ items.push(item);
         description: "",
         action1: {
             name: "update service",
-            action: updateServiceCDS
+            action: snippetAction1
         },
         labels: [
         ]
@@ -295,7 +297,7 @@ items.push(item);
             "saposs.bas-cap-guides.add_ui_annotations",
         ],
         labels: [
-    
+
         ]
     };
     items.push(item);
@@ -347,7 +349,7 @@ items.push(item);
         id: "test_with_real",
         title: "Test your application with live backend data",
         description: "In this step you will connect your local bookshop application to <b>SAP Business Technology Platform<b> for consuming live data",
-        
+
         itemIds: [
             "saposs.bas-cap-guides.create_production_profile",
             "saposs.bas-cap-guides.create_new_run_configuration",
@@ -361,7 +363,7 @@ items.push(item);
     };
     items.push(item);
 
-    
+
     item = {
         id: "create_production_profile",
         title: "Create a production profile to run with",
@@ -465,7 +467,7 @@ items.push(item);
         labels: [
         ]
     };
-    
+
     items.push(item);
 
 
@@ -508,6 +510,13 @@ export async function activate(context: vscode.ExtensionContext) {
     extensionPath = context.extensionPath;
 
 
+    const snippetApi = createSnippets();
+
+
+    snippetAction1 = new basAPI.actions.SnippetAction();
+    snippetAction1.snippetName = "snippet_1";
+    snippetAction1.contributorId = "saposs.bas-cap-guides";
+    snippetAction1.context = context;
 
     openWizardAction = new basAPI.actions.ExecuteAction();
     openWizardAction.executeAction = () => {
@@ -546,12 +555,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File created successfully");
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File created successfully");
 
-            vscode.commands.executeCommand('vscode.open',schemaDestUri);
-
+                vscode.commands.executeCommand('vscode.open', schemaDestUri);
+            }));
             
+
+
         });
     };
 
@@ -583,12 +594,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File created successfully");
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File created successfully");
 
-            vscode.commands.executeCommand('vscode.open',DestUri);
-
+                vscode.commands.executeCommand('vscode.open', DestUri);
+            }));
             
+
+
         });
     };
 
@@ -621,12 +634,15 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File created successfully");
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File created successfully");
 
-            vscode.commands.executeCommand('vscode.open',CSV1DestUri);
-            vscode.commands.executeCommand('vscode.open',CSV2DestUri);
-            
+                vscode.commands.executeCommand('vscode.open', CSV1DestUri);
+                vscode.commands.executeCommand('vscode.open', CSV2DestUri);
+            }));
+
+
+
         });
     };
 
@@ -658,24 +674,26 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File created successfully");
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File created successfully");
 
-            vscode.commands.executeCommand('vscode.open',DestUri);
-
+                vscode.commands.executeCommand('vscode.open', DestUri);
+            }));
             
+
+
         });
     };
 
-    
+
     application_test_run = new basAPI.actions.ExecuteAction();
-    application_test_run.executeAction = async() => {
+    application_test_run.executeAction = async () => {
 
         // change focus of run config
         vscode.commands.executeCommand("runConfigurations.focus");
 
         // run npm install task
-        let options: vscode.ShellExecutionOptions = {cwd: homeDir};
+        let options: vscode.ShellExecutionOptions = { cwd: homeDir };
         let execution = new vscode.ShellExecution("npm install", options);
         let task = new vscode.Task(
             { type: 'shell' },
@@ -683,9 +701,9 @@ export async function activate(context: vscode.ExtensionContext) {
             'npm install',
             'npm',
             execution);
-        
+
         vscode.tasks.executeTask(task);
-       
+
     }
 
     consumeSAPServices = new basAPI.actions.ExecuteAction();
@@ -722,12 +740,14 @@ export async function activate(context: vscode.ExtensionContext) {
             // ... Now we can add more files (like the csv files) using the addFileToCreate function 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File updated successfully");
-            vscode.commands.executeCommand('vscode.open',DestUri);
-
-
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File updated successfully");
+                vscode.commands.executeCommand('vscode.open', DestUri);
+            }));
             
+
+
+
         });
     };
 
@@ -759,12 +779,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File updated successfully");
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File updated successfully");
 
-            vscode.commands.executeCommand('vscode.open',DestUri);
-
+                vscode.commands.executeCommand('vscode.open', DestUri);
+            }));
             
+
+
         });
     };
 
@@ -799,9 +821,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File created successfully");
-            vscode.commands.executeCommand('vscode.open',DestUri);
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File created successfully");
+                vscode.commands.executeCommand('vscode.open', DestUri);
+            }));
+            
         });
     };
 
@@ -832,12 +856,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File updated successfully");
-            vscode.commands.executeCommand('vscode.open',DestUri);
-
-
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File updated successfully");
+                vscode.commands.executeCommand('vscode.open', DestUri);
+            }));
             
+
+
+
         });
     };
 
@@ -868,18 +894,20 @@ export async function activate(context: vscode.ExtensionContext) {
 
 
             // finally, when we're ready to write the files we need to call the apply function 
-            fileCreator.apply();
-            vscode.window.showInformationMessage("File updated successfully");
-            vscode.commands.executeCommand('vscode.open',DestUri);         
+            fileCreator.apply().then((val=>{
+                vscode.window.showInformationMessage("File updated successfully");
+                vscode.commands.executeCommand('vscode.open', DestUri);
+            }));
+            
         });
     };
 
     fileExplorerFocus = new basAPI.actions.ExecuteAction();
-    fileExplorerFocus.executeAction = async() => {
+    fileExplorerFocus.executeAction = async () => {
 
         // change focus of run config
         vscode.commands.executeCommand("runConfigurations.focus");
-       
+
     }
 
     cloneAction = new basAPI.actions.ExecuteAction();
@@ -899,14 +927,207 @@ export async function activate(context: vscode.ExtensionContext) {
         managerAPI.setData(EXT_ID, getCollections(), getItems());
     });
 
+
+    return snippetApi;
 }
 
+function createSnippets() {
+    return {
+        getCodeSnippets(context: any) {
+            const myContext = context;
+            const extPath = myContext.extensionPath;
+
+            const snippets = new Map<string, ISnippet>();
+            const snippet: ISnippet = {
+                getMessages() {
+                    return {
+                        title: "Update Service",
+                        description: "Update service definition to consume the external service.",
+                        applyButton: "Update service",
+                    };
+                },
+                async getQuestions() {
+                    return [
+                        {
+                        guiOptions: {
+                            hint: "Insert the entity name",
+                            link: {
+                                text: "wikipedia",
+                                url: "https://en.wikipedia.org/wiki/Configuration",
+                            },
+                        },
+                        type: "input",
+                        name: "entitya",
+                        message: "Insert the entity name"
+                    },
+                    {
+                        guiOptions: {
+                            hint: "Insert the entity2 name",
+                            link: {
+                                text: "wikipedia",
+                                url: "https://en.wikipedia.org/wiki/Configuration",
+                            },
+                        },
+                        type: "input",
+                        name: "entityb",
+                        message: "Insert the entity2 name",
+                        when:(answers: any) => {
+                            let p = _.get(answers, "entitya");
+                            if (p) return true; else return false;
+                        }
+                    },
+                     {
+                        guiOptions: {
+                            hint: "Insert the entity3 name",
+                            link: {
+                                text: "wikipedia",
+                                url: "https://en.wikipedia.org/wiki/Configuration",
+                            },
+                        },
+                        type: "input",
+                        name: "entityc",
+                        message: "Insert the entity3 name",
+                        when:(answers: any) => {
+                            let p = _.get(answers, "entityb");
+                            if (p) return true; else return false;
+                        }
+                    },
+                     {
+                        guiOptions: {
+                            hint: "Insert the entity4 name",
+                            link: {
+                                text: "wikipedia",
+                                url: "https://en.wikipedia.org/wiki/Configuration",
+                            },
+                        },
+                        type: "input",
+                        name: "entityd",
+                        message: "Insert the entity4 name",
+                        when:(answers: any) => {
+                            let p = _.get(answers, "entityc");
+                            if (p) return true; else return false;
+                        }
+                    },
+                    {
+                        guiOptions: {
+                            hint: "example of validators",
+                            link: {
+                                text: "wikipedia",
+                                url: "https://en.wikipedia.org/wiki/Configuration",
+                            },
+                        },
+                        type: "input",
+                        name: "validatorexample",
+                        message: "Example of validator",
+                        validate: (value: any, answers: any) => {
+                            return value.length > 1 ? true : "Enter at least 2 characters";
+                        }
+                    },
+                        {
+                        guiOptions: {
+                            hint: "Select the type of configuration you want to create.",
+                            link: {
+                                text: "wikipedia",
+                                url: "https://en.wikipedia.org/wiki/Configuration",
+                            },
+                        },
+                        type: "list",
+                        name: "configType",
+                        message: "Type",
+                        choices: ["option 1", "option 2", "option 3"],
+                        default: "option 2",
+                    },
+                    {
+                        guiOptions: {
+                            hint: "Provide a name for your new configuration.",
+                            mandatory: true,
+                        },
+                        type: "checkbox",
+                        name: "configName",
+                        message: "Example of checkbox",
+                        choices: ["option 1", "option 2", "option 3"],
+                        default: "option 2"
+                    },];
+                },
+                async getWorkspaceEdit(answers: any) {
+                    const we = new vscode.WorkspaceEdit();
 
 
+                    // get the target project workspace folder
+                    const workspaceFolder = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length ? vscode.workspace.workspaceFolders[0] : undefined;
+
+                    if (!workspaceFolder) {
+                        vscode.window.showErrorMessage("Cannot find folder");
+                        return;
+                    }
+
+                    const fileCreator = new FileCreator(we, context);
+
+                    // create schema.cds file using the file creator api
+                    const docUri: vscode.Uri = vscode.Uri.parse(`${context.extensionPath}/resources/cat-service_bp.cds`);
+                    const destUri = vscode.Uri.parse(`${workspaceFolder.uri.path}/srv/cat-service.cds`);
 
 
+                    const sourceContent = `using { my.bookshop as my } from '../db/schema';
+//Using statement for consuming Business Parther entity
 
+service CatalogService @(path:'/browse') {
 
+@readonly entity Books as SELECT from my.Books {*,
+    author.name as author
+} excluding { createdBy, modifiedBy };
+
+@requires_: 'authenticated-user'
+action submitOrder (book : Books.ID, amount: Integer);
+
+}
+`;
+
+                    // create the schema cds file inside the target project workspace
+                    // we.createFile(destUri, { ignoreIfExists: true, overwrite: true });
+                    // we.insert(destUri, new Position(0, 0), sourceContent, { needsConfirmation: false, label: "" });
+                   
+                    // we override the content of the file anyway.
+                    we.insert(destUri, new Position(2, 0), `//Using statement for consuming Business Parther entity\nusing { metadata as external} from './external/metadata.csn';\n\n`, { needsConfirmation: true, label: "adding service" });
+
+                    let str = "";
+                    if (answers.entitya && answers.entitya!=="") {
+                        str+=answers.entitya;
+                        str+=",\n"
+                    }
+                    if (answers.entityb && answers.entityb!=="") {
+                        str+=`      `
+                        str+=answers.entityb;
+                        str+=`,\n`
+                    }
+                    if (answers.entityc && answers.entityc!=="") {
+                        str+=`      `
+                        str+=answers.entityc;
+                        str+=`,\n`
+                    }
+                    if (answers.entityd && answers.entityd!=="") {
+                        str+=`      `
+                        str+=answers.entityd;
+                        str+=`,`
+                    }
+
+                    const cont1 = `//Service definition for consuming Business Parther entity
+  @readonly entity BusinessPartners as projection on external.A_BusinessPartner {
+      Key BusinessPartner as ID,
+      ${str}
+  }`;
+      
+                    we.insert(destUri, new Position(10, 0), cont1, { needsConfirmation: true, label: "adding entities" });
+
+                    return we;
+                }
+            };
+
+            snippets.set("snippet_1", snippet);
+            return snippets;
+        }
+    };
+}
 
 function getImage(imagePath: string): string {
     let image;
